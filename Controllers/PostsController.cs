@@ -103,7 +103,11 @@ namespace csharp_blog_backend.Controllers
           
 
             string fileNameWithPath = Path.Combine(Image, fileName);
-
+            byte[] b;
+            using (BinaryReader br = new BinaryReader(post.File.OpenReadStream()))
+            {
+                post.ImageBytes = br.ReadBytes((int)post.File.OpenReadStream().Length);
+            }
             using (var stream = new FileStream(fileNameWithPath, FileMode.Create))
             {
                 post.File.CopyTo(stream);
