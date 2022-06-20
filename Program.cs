@@ -12,6 +12,12 @@ builder.Services.AddCors(options =>
         });
 });
 // Add services to the container.
+// Add services to the container.
+builder.Services.AddControllersWithViews();
+
+string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<BlogContext>(options => options.UseSqlServer(connectionString));
+
 
 builder.Services.AddControllers();
 
@@ -27,10 +33,21 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
+app.UseStaticFiles();
+
 app.UseAuthorization();
 
 app.UseCors();
 
 app.MapControllers();
+//inizializzazione db
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var context = services.GetRequiredService<BlogContext>();
+    context.Database.EnsureCreated();
+   
+}
 
 app.Run();

@@ -12,5 +12,9 @@ namespace csharp_blog_backend.Models
         }
 
         public DbSet<Post> posts { get; set; }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Post>().ToTable("Posts");
+        }
     }
 }
