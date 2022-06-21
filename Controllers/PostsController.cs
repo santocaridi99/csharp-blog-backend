@@ -66,15 +66,27 @@ namespace csharp_blog_backend.Controllers
         // PUT: api/Posts/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPost(int id, Post post)
+        public async Task<IActionResult> PutPost(int id, [FromForm] Post post)
         {
             if (id != post.Id)
-            {
                 return BadRequest();
+            FileInfo fileInfo = new FileInfo(post.File.FileName);
+            Guid g = Guid.NewGuid();
+            string fileName = g.ToString() + fileInfo.Extension;
+            string Image = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Files");
+            string fileNameWithPath = Path.Combine(Image, fileName);
+            post.Image = "https://localhost:5000/Files/" + fileName;
+            //Save to Filesystem
+            using (var stream = new FileStream(fileNameWithPath, FileMode.Create))
+            {
+                post.File.CopyTo(stream);
             }
-
+            //Save into DB
+            using (BinaryReader br = new BinaryReader(post.File.OpenReadStream()))
+            {
+                post.ImageBytes = br.ReadBytes((int)post.File.OpenReadStream().Length);
+            }
             _context.Entry(post).State = EntityState.Modified;
-
             try
             {
                 await _context.SaveChangesAsync();
@@ -82,13 +94,9 @@ namespace csharp_blog_backend.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!PostExists(id))
-                {
                     return NotFound();
-                }
                 else
-                {
                     throw;
-                }
             }
 
             return NoContent();
